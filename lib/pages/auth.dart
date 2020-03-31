@@ -179,7 +179,7 @@ class _AuthPageState extends State<AuthPage> {
         .document("user->email")
         .get()
         .then((value) {
-      emailId = value[_userNameController.text];
+      emailId = value[_userNameController.text.toLowerCase()];
     });
     final result = await _auth.signInWithEmailAndPassword(
         email: emailId, password: _passwordController.text);
