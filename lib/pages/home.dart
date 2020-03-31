@@ -1,6 +1,8 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutterlogin/pages/auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class MyHomePage extends StatefulWidget {
@@ -13,6 +15,35 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  var actionButtonIcon;
+
+  onLogOut() async {
+    setState(() {
+      actionButtonIcon = CircularProgressIndicator();
+    });
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setBool("isSignedIn", false);
+    await _auth.signOut();
+
+    GoogleSignIn googleSignIn = GoogleSignIn();
+    if (await googleSignIn.isSignedIn()) {
+      await googleSignIn.signOut();
+    }
+
+    Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => AuthPage()));
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    setState(() {
+      actionButtonIcon = Icon(Icons.more_vert);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -22,18 +53,12 @@ class _MyHomePageState extends State<MyHomePage> {
           Padding(
             padding: EdgeInsets.only(right: 13),
             child: PopupMenuButton(
-              child: Icon(Icons.more_vert),
+              child: actionButtonIcon,
               itemBuilder: (context) => [
                 PopupMenuItem(
                   child: GestureDetector(
                     child: Text("Sign Out"),
-                    onTap: () async {
-                      SharedPreferences prefs =
-                          await SharedPreferences.getInstance();
-                      prefs.remove("UID");
-                      Navigator.of(context).pushReplacement(
-                          MaterialPageRoute(builder: (context) => AuthPage()));
-                    },
+                    onTap: onLogOut,
                   ),
                 ),
               ],

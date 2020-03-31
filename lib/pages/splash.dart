@@ -1,11 +1,12 @@
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutterlogin/globaldata.dart';
 import 'package:flutterlogin/pages/auth.dart';
 import 'package:flutterlogin/pages/home.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:transparent_image/transparent_image.dart';
 
 class Splash extends StatefulWidget {
   @override
@@ -14,6 +15,7 @@ class Splash extends StatefulWidget {
 
 class SplashState extends State<Splash> {
   SharedPreferences prefs;
+  FirebaseAuth _auth = FirebaseAuth.instance;
 
   @override
   void initState() {
@@ -21,8 +23,8 @@ class SplashState extends State<Splash> {
 
     Timer(Duration(milliseconds: 1800), () async {
       prefs = await SharedPreferences.getInstance();
-      var _loginUID = prefs.getString("UID");
-      if (_loginUID == null) {
+      var _isLoggedIn = prefs.getBool("isSignedIn");
+      if (_isLoggedIn != true) {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => AuthPage()),
@@ -30,8 +32,9 @@ class SplashState extends State<Splash> {
       } else {
         var stream = Firestore.instance
             .collection("user-data")
-            .document(_loginUID)
+            .document((await _auth.currentUser()).uid)
             .snapshots();
+
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => MyHomePage(stream: stream)),

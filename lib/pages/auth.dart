@@ -1,12 +1,19 @@
+import 'dart:async';
+import 'dart:math';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutterlogin/custom_shapes.dart';
+import 'package:flutterlogin/globaldata.dart';
 import 'package:flutterlogin/pages/home.dart';
 import 'package:flutterlogin/styles.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthPage extends StatefulWidget {
@@ -14,11 +21,14 @@ class AuthPage extends StatefulWidget {
   _AuthPageState createState() => _AuthPageState();
 }
 
-class _AuthPageState extends State<AuthPage> {
+class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
   String loginText = "";
   String modeChangeText = "";
   String mode = ""; // sign_in or sign_up
-  double heightFraction = 0;
+  double googleSignInButtonOpacity;
+  double topHeightFraction = 0.2,
+      bottomHeightFraction = 0.2,
+      formHeightFraction = 0.4;
   SharedPreferences prefs;
   List<Widget> inputSections = [];
   var loginFromSubmitButtonIcon;
@@ -134,8 +144,13 @@ class _AuthPageState extends State<AuthPage> {
     setState(() {
       modeChangeText = "Already a user?";
       loginText = "Sign Up";
+      topHeightFraction = 0.24;
+      formHeightFraction = 0.50;
+      bottomHeightFraction = 0.24;
+      googleSignInButtonOpacity = 0.0;
       inputSections = signUpInputSections;
     });
+
     mode = "sign_up";
   }
 
@@ -143,8 +158,13 @@ class _AuthPageState extends State<AuthPage> {
     setState(() {
       modeChangeText = "Create an Account";
       loginText = "Sign In";
+      topHeightFraction = 0.34;
+      formHeightFraction = 0.3;
+      bottomHeightFraction = 0.34;
+      googleSignInButtonOpacity = 1.0;
       inputSections = signInInputSections;
     });
+
     mode = "sign_in";
   }
 
@@ -152,22 +172,14 @@ class _AuthPageState extends State<AuthPage> {
     setState(() {
       loginFromSubmitButtonIcon = Icon(Icons.arrow_forward);
     });
+
     prefs = await SharedPreferences.getInstance();
     if (prefs.getBool("hasAccount") == null) {
       switchToSignUp();
     } else {
-      var _loginUID = prefs.getString("UID");
-      if (_loginUID == null) {
+      if (prefs.getBool("isSignedIn") != true ||
+          (await _auth.currentUser()).isEmailVerified == false) {
         switchToSignIn();
-      } else {
-        var stream = Firestore.instance
-            .collection("user-data")
-            .document(_loginUID)
-            .snapshots();
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => MyHomePage(stream: stream)),
-        );
       }
     }
   }
@@ -181,19 +193,27 @@ class _AuthPageState extends State<AuthPage> {
         .then((value) {
       emailId = value[_userNameController.text.toLowerCase()];
     });
-    final result = await _auth.signInWithEmailAndPassword(
+    final _result = await _auth.signInWithEmailAndPassword(
         email: emailId, password: _passwordController.text);
 
-    if (result == null) {
+    if (_result == null) {
       print("Invalid Credentials!");
       return null;
     }
+
+    if (!_result.user.isEmailVerified) {
+      setState(() {
+        loginFromSubmitButtonIcon = Icon(Icons.arrow_forward);
+      });
+      showAlertDialog(context, "Alert", "Verify your email, then Sign In!");
+      return null;
+    }
     prefs.setBool("hasAccount", true);
-    prefs.setString("UID", result.user.uid);
+    prefs.setBool("isSignedIn", true);
 
     var stream = Firestore.instance
         .collection("user-data")
-        .document(result.user.uid)
+        .document(_result.user.uid)
         .snapshots();
 
     Navigator.pushReplacement(
@@ -203,7 +223,71 @@ class _AuthPageState extends State<AuthPage> {
   }
 
   void onSignUp() async {
-    // _auth.createUserWithEmailAndPassword(email: null, password: null)
+    if (_passwordController.text != _confirmPasswordController.text) {
+      print("Password and Confirm Password donot match!");
+      return null;
+    }
+
+    AuthResult _result;
+    try {
+      _result = await _auth.createUserWithEmailAndPassword(
+          email: _emailIdController.text, password: _passwordController.text);
+      if (_result == null) {
+        print("Invalid Credentials!");
+        return null;
+      }
+    } catch (signUpError) {
+      if (signUpError is PlatformException) {
+        if (signUpError.code == 'ERROR_EMAIL_ALREADY_IN_USE') {
+          /// `foo@bar.com` has already been registered.
+          print("Email Already in use!");
+          return null;
+        }
+      }
+    }
+
+    UserUpdateInfo userUpdateInfo = UserUpdateInfo();
+    userUpdateInfo.displayName = _userNameController.text;
+    await _result.user.updateProfile(userUpdateInfo);
+
+    _result.user.sendEmailVerification(); // Sending Verification Mail
+
+    await Firestore.instance
+        .collection("relations")
+        .document("user->email")
+        .setData(
+            {_userNameController.text.toLowerCase(): _emailIdController.text},
+            merge: true);
+
+    await Firestore.instance
+        .collection("user-data")
+        .document(_result.user.uid)
+        .setData({
+      "username": _userNameController.text,
+      "MP": (1000 + Random().nextInt(100000 - 1000)).toString(),
+      "your_skill": skillSet[Random().nextInt(skillSet.length)],
+      "phonenumber": (_phoneNumberController.text.startsWith("+"))
+          ? _phoneNumberController.text
+          : "+91" + _phoneNumberController.text,
+    });
+
+    Fluttertoast.showToast(
+      msg: "Verify email and Sign In!",
+      toastLength: Toast.LENGTH_LONG,
+      gravity: ToastGravity.CENTER,
+      timeInSecForIosWeb: 2,
+      backgroundColor: Colors.white,
+      textColor: Colors.black,
+      fontSize: 16.0,
+    );
+
+    prefs.setBool("hasAccount", true);
+    prefs.setBool("isSignedIn", true);
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => AuthPage()),
+    );
   }
 
   @override
@@ -215,6 +299,7 @@ class _AuthPageState extends State<AuthPage> {
 
   @override
   Widget build(BuildContext context) {
+    // SystemChrome.setEnabledSystemUIOverlays([SystemUiOverlay.top]);
     return Scaffold(
       resizeToAvoidBottomInset: false,
       body: Container(
@@ -223,7 +308,10 @@ class _AuthPageState extends State<AuthPage> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Flexible(
+            AnimatedContainer(
+              height: MediaQuery.of(context).size.height * topHeightFraction,
+              curve: Curves.easeOut,
+              duration: Duration(milliseconds: 200),
               child: CustomPaint(
                 painter: TopSection(),
                 child: Container(
@@ -240,11 +328,11 @@ class _AuthPageState extends State<AuthPage> {
                 ),
               ),
             ),
-            SafeArea(
-              //duration: Duration(milliseconds: 50),
+            AnimatedContainer(
+              duration: Duration(milliseconds: 100),
               //alignment: Alignment.centerLeft,
               //width: MediaQuery.of(context).size.width,
-              //height: MediaQuery.of(context).size.height * heightFraction,
+              height: MediaQuery.of(context).size.height * formHeightFraction,
               child: Stack(
                 alignment: Alignment.centerRight,
                 children: <Widget>[
@@ -255,7 +343,7 @@ class _AuthPageState extends State<AuthPage> {
                     child: Container(
                       padding: EdgeInsets.only(
                           left: 25, top: 10, bottom: 10, right: 30),
-                      margin: EdgeInsets.only(top: 15, bottom: 15),
+                      margin: EdgeInsets.only(top: 13, bottom: 0),
                       width: MediaQuery.of(context).size.width * 0.3,
                       decoration: BoxDecoration(
                         color: Colors.black54,
@@ -275,20 +363,30 @@ class _AuthPageState extends State<AuthPage> {
                       backgroundColor: Colors.purple.shade600,
                       child: loginFromSubmitButtonIcon,
                       onPressed: () {
+                        setState(() {
+                          loginFromSubmitButtonIcon =
+                              CircularProgressIndicator();
+                        });
                         if (mode == "sign_in") {
-                          setState(() {
-                            loginFromSubmitButtonIcon =
-                                CircularProgressIndicator();
-                          });
                           onSignIn();
+                        } else {
+                          onSignUp();
                         }
+//                        _phoneNumberController.text = "";
+//                        _emailIdController.text = "";
+//                        _userNameController.text = "";
+//                        _passwordController.text = "";
+//                        _confirmPasswordController.text = "";
                       },
                     ),
                   ),
                 ],
               ),
             ),
-            Flexible(
+            AnimatedContainer(
+              duration: Duration(milliseconds: 150),
+              curve: Curves.easeOut,
+              height: MediaQuery.of(context).size.height * bottomHeightFraction,
               child: CustomPaint(
                 painter: BottomSection(),
                 child: Column(
@@ -320,36 +418,95 @@ class _AuthPageState extends State<AuthPage> {
                     Container(
                       alignment: Alignment.bottomCenter,
                       padding: EdgeInsets.only(bottom: 20),
-                      child: ButtonTheme(
-                        height: 50,
-                        minWidth: 220,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30)),
-                        buttonColor: Colors.black12,
-                        child: RaisedButton(
-                          elevation: 0,
-                          highlightElevation: 0,
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: <Widget>[
-                              Text(
-                                "Log In with ",
-                                style: TextStyle(
-                                  fontSize: 25,
-                                  color: Colors.white,
+                      child: AnimatedOpacity(
+                        opacity: googleSignInButtonOpacity,
+                        duration: Duration(milliseconds: 200),
+                        child: ButtonTheme(
+                          height: 50,
+                          minWidth: 220,
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30)),
+                          buttonColor: Colors.black12,
+                          child: RaisedButton(
+                            elevation: 0,
+                            highlightElevation: 0,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: <Widget>[
+                                Text(
+                                  "Sign In with ",
+                                  style: TextStyle(
+                                    fontSize: 25,
+                                    color: Colors.white,
+                                  ),
                                 ),
-                              ),
-                              SizedBox(
-                                height: 30,
-                                width: 30,
-                                child: Image.asset("images/googleLogo.png"),
-                              ),
-                            ],
+                                SizedBox(
+                                  height: 30,
+                                  width: 30,
+                                  child: Image.asset("images/googleLogo.png"),
+                                ),
+                              ],
+                            ),
+                            onPressed: () async {
+                              // Disabling Button when in SignUp
+                              if (mode == "sign_up") {
+                                return null;
+                              }
+
+                              GoogleSignIn googleSignIn = GoogleSignIn();
+                              GoogleSignInAccount account =
+                                  await googleSignIn.signIn();
+
+                              if (account == null) {
+                                return null;
+                              }
+
+                              final GoogleSignInAuthentication googleAuth =
+                                  await account.authentication;
+
+                              // get the credentials to (access / id token)
+                              // to sign in via Firebase Authentication
+                              final AuthCredential credential =
+                                  GoogleAuthProvider.getCredential(
+                                      accessToken: googleAuth.accessToken,
+                                      idToken: googleAuth.idToken);
+
+                              FirebaseUser user =
+                                  (await _auth.signInWithCredential(credential))
+                                      .user;
+
+                              if (!user.isEmailVerified) {
+                                setState(() {
+                                  loginFromSubmitButtonIcon =
+                                      Icon(Icons.arrow_forward);
+                                });
+                                showAlertDialog(context, "Alert",
+                                    "Verify your email, then Sign In!");
+                                return null;
+                              }
+
+                              // Now we store some data in prefs and then Navigate.
+                              prefs.setBool("hasAccount", true);
+                              prefs.setBool("isSignedIn", true);
+
+                              var stream = Firestore.instance
+                                  .collection("user-data")
+                                  .document(user.uid)
+                                  .snapshots();
+
+                              print("VERIFIED...");
+                              print(user.displayName);
+                              print(user.isEmailVerified);
+
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) =>
+                                        MyHomePage(stream: stream)),
+                              );
+                            },
                           ),
-                          onPressed: () {
-                            return null;
-                          },
                         ),
                       ),
                     ),
