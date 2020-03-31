@@ -25,7 +25,7 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
   String loginText = "";
   String modeChangeText = "";
   String mode = ""; // sign_in or sign_up
-  double googleSignInButtonOpacity;
+  double googleSignInButtonOpacity = 0.0;
   double topHeightFraction = 0.2,
       bottomHeightFraction = 0.2,
       formHeightFraction = 0.4;
@@ -43,7 +43,7 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
   final signUpInputSections = [
     Row(
       children: <Widget>[
-        Icon(Icons.person_pin, color: Colors.blue.shade300),
+        Icon(Icons.person, color: Colors.blue.shade300),
         SizedBox(width: 10),
         Flexible(
           child: TextField(
@@ -113,7 +113,7 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
   final signInInputSections = [
     Row(
       children: <Widget>[
-        Icon(Icons.person_pin, color: Colors.blue.shade300),
+        Icon(Icons.person, color: Colors.blue.shade300),
         SizedBox(width: 10),
         Flexible(
           child: TextField(
@@ -144,9 +144,9 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
     setState(() {
       modeChangeText = "Already a user?";
       loginText = "Sign Up";
-      topHeightFraction = 0.24;
+      topHeightFraction = 0.22;
       formHeightFraction = 0.50;
-      bottomHeightFraction = 0.24;
+      bottomHeightFraction = 0.22;
       googleSignInButtonOpacity = 0.0;
       inputSections = signUpInputSections;
     });
@@ -158,9 +158,9 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
     setState(() {
       modeChangeText = "Create an Account";
       loginText = "Sign In";
-      topHeightFraction = 0.34;
-      formHeightFraction = 0.3;
-      bottomHeightFraction = 0.34;
+      topHeightFraction = 0.30;
+      formHeightFraction = 0.25;
+      bottomHeightFraction = 0.30;
       googleSignInButtonOpacity = 1.0;
       inputSections = signInInputSections;
     });
@@ -330,7 +330,6 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
             ),
             AnimatedContainer(
               duration: Duration(milliseconds: 100),
-              //alignment: Alignment.centerLeft,
               //width: MediaQuery.of(context).size.width,
               height: MediaQuery.of(context).size.height * formHeightFraction,
               child: Stack(
@@ -341,6 +340,7 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
                     margin: EdgeInsets.only(
                         right: MediaQuery.of(context).size.width * 0.15),
                     child: Container(
+
                       padding: EdgeInsets.only(
                           left: 25, top: 10, bottom: 10, right: 30),
                       margin: EdgeInsets.only(top: 13, bottom: 0),
@@ -352,7 +352,10 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
                           bottomRight: Radius.circular(100),
                         ),
                       ),
-                      child: Column(
+                      child: ListView(
+                        padding: EdgeInsets.symmetric(vertical: 10),
+                        physics: NeverScrollableScrollPhysics(),
+                        //mainAxisAlignment: MainAxisAlignment.center,
                         children: inputSections,
                       ),
                     ),
