@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutterlogin/pages/auth.dart';
 import 'package:flutterlogin/pages/home.dart';
+import 'package:flutterlogin/pages/splash.dart';
 
 void main() {
   runApp(MyApp());
@@ -13,8 +14,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Login',
       debugShowCheckedModeBanner: false,
-      home: AuthPage(), // MyHomePage(),
+      home: Splash(), // MyHomePage(),
     );
   }
 }
-

@@ -11,8 +11,8 @@ class TopSection extends CustomPainter {
 
     final Gradient gradient = new LinearGradient(
       colors: <Color>[
-        Colors.greenAccent[400],
-        Colors.lightGreenAccent[200],
+        Colors.deepPurple,
+        Colors.blueAccent[200],
       ],
       stops: [
         0.4,
@@ -26,10 +26,11 @@ class TopSection extends CustomPainter {
 
     var path = Path();
 
-    path.moveTo(0, size.height * 0.8);
+    path.moveTo(0, size.height * 0.9);
     //path.relativeConicTo(x1, y1, x2, y2, w)
-    path.cubicTo(size.width * 0.25, size.height * 1, size.width * 0.4,
-        size.height * 0.1, size.width, size.height * 0.4);
+    path.cubicTo(size.width * 0.2, size.height * 0.9,
+        size.width * 0.3, size.height * 0.1,
+        size.width, size.height * 0.4);
     path.lineTo(size.width, 0);
     path.lineTo(0, 0);
 
@@ -53,15 +54,15 @@ class BottomSection extends CustomPainter {
 
     final Gradient gradient = new LinearGradient(
       colors: <Color>[
-        Colors.lightGreenAccent.shade700,
-        Colors.greenAccent,
+        Colors.blue.shade700,
+        Colors.tealAccent.shade700,
       ],
       stops: [
-        0.3,
+        0.5,
         1.0,
       ],
-      begin: Alignment.centerLeft,
-      end: Alignment.centerRight,
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
     );
     paint.shader = gradient.createShader(rect);
     paint.style = PaintingStyle.fill; // Change this to fill
