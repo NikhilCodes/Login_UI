@@ -158,9 +158,9 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
     setState(() {
       modeChangeText = "Create an Account";
       loginText = "Sign In";
-      topHeightFraction = 0.30;
+      topHeightFraction = 0.33;
       formHeightFraction = 0.25;
-      bottomHeightFraction = 0.30;
+      bottomHeightFraction = 0.33;
       googleSignInButtonOpacity = 1.0;
       inputSections = signInInputSections;
     });
@@ -317,14 +317,31 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
                 child: Container(
                   padding: EdgeInsets.all(10),
                   alignment: Alignment.bottomCenter,
-                  child: Text(
-                    loginText,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                        fontSize: 45,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: <Widget>[
+                      SizedBox(
+                        child: Image.asset("images/logo.png"),
+                        height: 110,
+                      ),
+                      Text(
+                        loginText,
+                        style: TextStyle(
+                          fontSize: 45,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
                   ),
+//                  child: Text(
+//                    loginText,
+//                    textAlign: TextAlign.center,
+//                    style: TextStyle(
+//                        fontSize: 45,
+//                        fontWeight: FontWeight.w700,
+//                        color: Colors.white),
+//                  ),
                 ),
               ),
             ),
@@ -340,7 +357,6 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
                     margin: EdgeInsets.only(
                         right: MediaQuery.of(context).size.width * 0.15),
                     child: Container(
-
                       padding: EdgeInsets.only(
                           left: 25, top: 10, bottom: 10, right: 30),
                       margin: EdgeInsets.only(top: 13, bottom: 0),

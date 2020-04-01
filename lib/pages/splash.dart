@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutterlogin/globaldata.dart';
 import 'package:flutterlogin/pages/auth.dart';
@@ -46,22 +47,37 @@ class SplashState extends State<Splash> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.yellow.shade600,
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Image.asset("images/logo.png"),
-            SizedBox(height: 10),
-            Text(
-              "NikhilCodes",
-              style: TextStyle(
-                color: Colors.black,
-                fontWeight: FontWeight.w300,
-                fontSize: 30,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topRight,
+            end: Alignment.bottomCenter,
+            colors: <Color>[
+              Colors.purple.shade700,
+              Colors.deepPurple.shade900,
+            ],
+          ),
+        ),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              SizedBox(
+                child: Image.asset("images/logo.png"),
+                height: 200,
               ),
-            ),
-          ],
+              SizedBox(height: 40),
+              Text(
+                "WallCream",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w400,
+                  fontFamily: "Roboto",
+                  fontSize: 30,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
