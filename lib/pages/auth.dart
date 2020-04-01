@@ -329,7 +329,7 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
               ),
             ),
             AnimatedContainer(
-              duration: Duration(milliseconds: 100),
+              duration: Duration(milliseconds: 200),
               //width: MediaQuery.of(context).size.width,
               height: MediaQuery.of(context).size.height * formHeightFraction,
               child: Stack(
@@ -387,7 +387,7 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
               ),
             ),
             AnimatedContainer(
-              duration: Duration(milliseconds: 150),
+              duration: Duration(milliseconds: 200),
               curve: Curves.easeOut,
               height: MediaQuery.of(context).size.height * bottomHeightFraction,
               child: CustomPaint(

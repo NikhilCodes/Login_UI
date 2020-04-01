@@ -7,7 +7,7 @@ final skillSet = [
   "Singularity",
   "Foresight",
   "Evasion",
-  "procrastination",
+  "Procrastination",
   "Invisiblity",
   "Accel",
   "Holy Javelin",
@@ -26,7 +26,6 @@ showAlertDialog(BuildContext context, String title, String body) {
   Widget okButton = FlatButton(
     child: Text("OK"),
     onPressed: () {
-      print("Pressed OK");
       Navigator.pop(context);
     },
   );
@@ -48,3 +47,5 @@ showAlertDialog(BuildContext context, String title, String body) {
     },
   );
 }
+
+
