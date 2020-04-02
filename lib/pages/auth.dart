@@ -11,6 +11,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutterlogin/custom_shapes.dart';
 import 'package:flutterlogin/globaldata.dart';
 import 'package:flutterlogin/pages/home.dart';
+import 'package:flutterlogin/pages/otp_entry.dart';
 import 'package:flutterlogin/styles.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -33,6 +34,7 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
   List<Widget> inputSections = [];
   var loginFromSubmitButtonIcon;
   FirebaseAuth _auth = FirebaseAuth.instance;
+  final ScrollController _scrollController = ScrollController();
 
   static TextEditingController _userNameController = TextEditingController(),
       _emailIdController = TextEditingController(),
@@ -144,8 +146,8 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
     setState(() {
       modeChangeText = "Already a user?";
       loginText = "Sign Up";
-      topHeightFraction = 0.22;
-      formHeightFraction = 0.50;
+      topHeightFraction = 0.23;
+      formHeightFraction = 0.46;
       bottomHeightFraction = 0.22;
       googleSignInButtonOpacity = 0.0;
       inputSections = signUpInputSections;
@@ -159,7 +161,7 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
       modeChangeText = "Create an Account";
       loginText = "Sign In";
       topHeightFraction = 0.33;
-      formHeightFraction = 0.25;
+      formHeightFraction = 0.20;
       bottomHeightFraction = 0.33;
       googleSignInButtonOpacity = 1.0;
       inputSections = signInInputSections;
@@ -250,14 +252,12 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
     userUpdateInfo.displayName = _userNameController.text;
     await _result.user.updateProfile(userUpdateInfo);
 
-    _result.user.sendEmailVerification(); // Sending Verification Mail
-
     await Firestore.instance
         .collection("relations")
         .document("user->email")
         .setData(
-            {_userNameController.text.toLowerCase(): _emailIdController.text},
-            merge: true);
+        {_userNameController.text.toLowerCase(): _emailIdController.text},
+        merge: true);
 
     await Firestore.instance
         .collection("user-data")
@@ -271,22 +271,16 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
           : "+91" + _phoneNumberController.text,
     });
 
-    Fluttertoast.showToast(
-      msg: "Verify email and Sign In!",
-      toastLength: Toast.LENGTH_LONG,
-      gravity: ToastGravity.CENTER,
-      timeInSecForIosWeb: 2,
-      backgroundColor: Colors.white,
-      textColor: Colors.black,
-      fontSize: 16.0,
-    );
-
-    prefs.setBool("hasAccount", true);
-    prefs.setBool("isSignedIn", true);
-
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => AuthPage()),
+    print("Sending Verification Mail...");
+    _result.user.sendEmailVerification();
+    await Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (context) => OtpEntryPage(
+          phoneNumber: _phoneNumberController.text.startsWith("+")
+              ? _phoneNumberController.text
+              : "+91" + _phoneNumberController.text,
+        ),
+      ),
     );
   }
 
@@ -297,8 +291,15 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
         .addPostFrameCallback((timeStamp) => startUpJobs(context));
   }
 
+  afterBuild() {
+    _scrollController.jumpTo(10);
+  }
+
   @override
   Widget build(BuildContext context) {
+    WidgetsBinding.instance
+        .addPostFrameCallback((timeStamp) => afterBuild());
+
     // SystemChrome.setEnabledSystemUIOverlays([SystemUiOverlay.top]);
     return Scaffold(
       resizeToAvoidBottomInset: false,
@@ -318,16 +319,23 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
                   padding: EdgeInsets.all(10),
                   alignment: Alignment.bottomCenter,
                   child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: <Widget>[
-                      SizedBox(
-                        child: Image.asset("images/logo.png"),
-                        height: 110,
+                      Hero(
+                        tag: "app-logo",
+                        child: SizedBox(
+                          child: Placeholder(
+                            color: Colors.white,
+                          ),
+                          width: 110,
+                          height: 100,
+                        ),
                       ),
                       Text(
                         loginText,
                         style: TextStyle(
-                          fontSize: 45,
+                          fontSize: 50,
                           fontWeight: FontWeight.w700,
                           color: Colors.white,
                         ),
@@ -359,7 +367,7 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
                     child: Container(
                       padding: EdgeInsets.only(
                           left: 25, top: 10, bottom: 10, right: 30),
-                      margin: EdgeInsets.only(top: 13, bottom: 0),
+                      //margin: EdgeInsets.only(top: 5, bottom: 0),
                       width: MediaQuery.of(context).size.width * 0.3,
                       decoration: BoxDecoration(
                         color: Colors.black54,
@@ -369,9 +377,9 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
                         ),
                       ),
                       child: ListView(
-                        padding: EdgeInsets.symmetric(vertical: 10),
+                        controller: _scrollController,
+                        padding: EdgeInsets.only(top: 0, bottom: 0),
                         physics: NeverScrollableScrollPhysics(),
-                        //mainAxisAlignment: MainAxisAlignment.center,
                         children: inputSections,
                       ),
                     ),
@@ -513,10 +521,6 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
                                   .collection("user-data")
                                   .document(user.uid)
                                   .snapshots();
-
-                              print("VERIFIED...");
-                              print(user.displayName);
-                              print(user.isEmailVerified);
 
                               Navigator.pushReplacement(
                                 context,

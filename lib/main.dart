@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutterlogin/pages/auth.dart';
 import 'package:flutterlogin/pages/home.dart';
+import 'package:flutterlogin/pages/otp_entry.dart';
 import 'package:flutterlogin/pages/splash.dart';
 
 void main() {
@@ -14,7 +15,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Login',
       debugShowCheckedModeBanner: false,
-      home: Splash(), // MyHomePage(),
+      home: Splash(), //OtpEntryPage(phoneNumber: "+917077346194"),
     );
   }
 }

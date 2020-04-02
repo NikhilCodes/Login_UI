@@ -21,6 +21,31 @@ final skillSet = [
 
 /// Global Functions
 
+showTutorial(BuildContext context) {
+  showAlertDialog(context,
+      "Tutorial",
+      ""
+  );
+}
+
+showLoggingOut(BuildContext context) {
+  AlertDialog alert = AlertDialog(
+    title: Row(
+      children: <Widget>[
+        Text("Logging Out..."),
+        CircularProgressIndicator(),
+      ],
+    ),
+  );
+
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return alert;
+    },
+  );
+}
+
 showAlertDialog(BuildContext context, String title, String body) {
   // set up the button
   Widget okButton = FlatButton(

@@ -28,7 +28,10 @@ class SplashState extends State<Splash> {
       if (_isLoggedIn != true) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => AuthPage()),
+          PageRouteBuilder(
+            transitionDuration: Duration(seconds: 1),
+            pageBuilder: (_, __, ___) => AuthPage()
+          ),
         );
       } else {
         var stream = Firestore.instance
@@ -62,9 +65,15 @@ class SplashState extends State<Splash> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              SizedBox(
-                child: Image.asset("images/logo.png"),
-                height: 200,
+              Hero(
+                tag: "app-logo",
+                child: SizedBox(
+                  child: Placeholder(
+                    color: Colors.white,
+                  ),
+                  height: 200,
+                  width: 200,
+                ),
               ),
               SizedBox(height: 40),
               Text(

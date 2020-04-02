@@ -17,6 +17,7 @@ environment:
   sdk: ">=2.1.0 <3.0.0"
 
 dependencies:
+  pin_input_text_field:
   google_sign_in:
   fluttertoast:
   shared_preferences:
@@ -47,7 +48,6 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
-    - images/logo.png
     - images/googleLogo.png
 
 

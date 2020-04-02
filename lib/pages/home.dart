@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutterlogin/globaldata.dart';
 import 'package:flutterlogin/pages/auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -17,13 +18,12 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  SharedPreferences prefs;
   var actionButtonIcon;
 
   onLogOut() async {
-    setState(() {
-      actionButtonIcon = CircularProgressIndicator();
-    });
-    SharedPreferences prefs = await SharedPreferences.getInstance();
+    showLoggingOut(context);
+
     prefs.setBool("isSignedIn", false);
     await _auth.signOut();
 
@@ -43,9 +43,20 @@ class _MyHomePageState extends State<MyHomePage> {
       actionButtonIcon = Icon(Icons.more_vert);
     });
   }
+  
+  void postBuildCallback() async {
+    prefs = await SharedPreferences.getInstance();
+    if (!prefs.containsKey("isFirstTimeUser")) {
+      showTutorial(context);
+      prefs.setBool("isFirstTimeUser", true);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    WidgetsBinding.instance
+        .addPostFrameCallback((timeStamp) => postBuildCallback());
+
     return Scaffold(
       appBar: AppBar(
         title: Text("User Profile"),
