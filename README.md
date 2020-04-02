@@ -8,9 +8,9 @@ A Login UI designed in Flutter.
  - Bits of animations
  - Google OAuth
  - Email verification
+ - Phone Number Verification (OTP)
   
 ## TODO
- - Implement phone OTP verification
  - Form Validation (Show Error message on UI not in Console)
 
 ## UI Screenshots
