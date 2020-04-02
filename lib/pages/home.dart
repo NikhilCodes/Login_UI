@@ -68,6 +68,12 @@ class _MyHomePageState extends State<MyHomePage> {
               itemBuilder: (context) => [
                 PopupMenuItem(
                   child: GestureDetector(
+                    child: Text("Tutorial"),
+                    onTap: () => showTutorial(context),
+                  ),
+                ),
+                PopupMenuItem(
+                  child: GestureDetector(
                     child: Text("Sign Out"),
                     onTap: onLogOut,
                   ),

@@ -24,7 +24,11 @@ final skillSet = [
 showTutorial(BuildContext context) {
   showAlertDialog(context,
       "Tutorial",
-      ""
+      "This app is a random fantasy world profile generator.\n"
+      "\n"
+      "UserName -> Avatar Name\n"
+      "Skill -> Every user is assigned a Random Skill\n"
+      "MP -> Magic Points"
   );
 }
 
