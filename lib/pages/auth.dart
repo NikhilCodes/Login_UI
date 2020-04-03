@@ -225,24 +225,93 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
   }
 
   void onSignUp() async {
+
+    // Form Validations
     if (_passwordController.text != _confirmPasswordController.text) {
-      print("Password and Confirm Password donot match!");
+      Fluttertoast.showToast(
+        msg: "Passwords donot match!",
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.CENTER,
+        timeInSecForIosWeb: 2,
+        backgroundColor: Colors.white,
+        textColor: Colors.black,
+        fontSize: 16.0,
+      );
+      setState(() {
+        loginFromSubmitButtonIcon = Icon(Icons.arrow_forward);
+      });
       return null;
     }
+
+    if (double.tryParse(_phoneNumberController.text) == null) {
+      Fluttertoast.showToast(
+        msg: "Enter a Valid Phone Number",
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.CENTER,
+        timeInSecForIosWeb: 2,
+        backgroundColor: Colors.white,
+        textColor: Colors.black,
+        fontSize: 16.0,
+      );
+      setState(() {
+        loginFromSubmitButtonIcon = Icon(Icons.arrow_forward);
+      });
+      return null;
+    }
+
+    if (!_emailIdController.text.contains("@")) {
+      Fluttertoast.showToast(
+        msg: "Enter a Valid Email",
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.CENTER,
+        timeInSecForIosWeb: 2,
+        backgroundColor: Colors.white,
+        textColor: Colors.black,
+        fontSize: 16.0,
+      );
+      setState(() {
+        loginFromSubmitButtonIcon = Icon(Icons.arrow_forward);
+      });
+      return null;
+    }
+    ///
 
     AuthResult _result;
     try {
       _result = await _auth.createUserWithEmailAndPassword(
           email: _emailIdController.text, password: _passwordController.text);
       if (_result == null) {
-        print("Invalid Credentials!");
+        Fluttertoast.showToast(
+          msg: "Email already registered!",
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.CENTER,
+          timeInSecForIosWeb: 2,
+          backgroundColor: Colors.white,
+          textColor: Colors.black,
+          fontSize: 16.0,
+        );
+        setState(() {
+          loginFromSubmitButtonIcon = Icon(Icons.arrow_forward);
+        });
         return null;
       }
     } catch (signUpError) {
       if (signUpError is PlatformException) {
         if (signUpError.code == 'ERROR_EMAIL_ALREADY_IN_USE') {
           /// `foo@bar.com` has already been registered.
-          print("Email Already in use!");
+
+          Fluttertoast.showToast(
+            msg: "Email already registered!",
+            toastLength: Toast.LENGTH_LONG,
+            gravity: ToastGravity.CENTER,
+            timeInSecForIosWeb: 2,
+            backgroundColor: Colors.white,
+            textColor: Colors.black,
+            fontSize: 16.0,
+          );
+          setState(() {
+            loginFromSubmitButtonIcon = Icon(Icons.arrow_forward);
+          });
           return null;
         }
       }
@@ -292,7 +361,7 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
   }
 
   afterBuild() {
-    _scrollController.jumpTo(10);
+    //_scrollController.jumpTo(10);
   }
 
   @override
