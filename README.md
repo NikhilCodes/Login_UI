@@ -10,6 +10,8 @@ A Login UI designed in Flutter.
  - Email verification
  - Phone Number Verification (OTP)
  - Form Validation
+
+### NOTE : Before Running this dont forget to add google-services.json file for Firebase.
   
 ## UI Screenshots
 ![Sign In UI](/demo/signin.png)
